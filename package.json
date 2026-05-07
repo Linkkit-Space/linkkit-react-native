@@ -1,0 +1,67 @@
+{
+  "name": "@linkkit/react-native",
+  "version": "1.0.0",
+  "description": "React Native SDK for Linkkit — deep link attribution and conversion tracking.",
+  "main": "lib/commonjs/index.js",
+  "module": "lib/module/index.js",
+  "types": "lib/typescript/src/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./lib/module/index.js",
+      "require": "./lib/commonjs/index.js",
+      "types": "./lib/typescript/src/index.d.ts"
+    }
+  },
+  "files": [
+    "lib/",
+    "src/"
+  ],
+  "scripts": {
+    "build": "bob build",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src --ext .ts,.tsx",
+    "prepare": "bob build"
+  },
+  "keywords": [
+    "linkkit",
+    "react-native",
+    "attribution",
+    "conversion-tracking",
+    "deep-links",
+    "analytics"
+  ],
+  "author": "Linkkit",
+  "license": "MIT",
+  "peerDependencies": {
+    "react": ">=17.0.0",
+    "react-native": ">=0.68.0",
+    "@react-native-async-storage/async-storage": ">=1.17.0"
+  },
+  "devDependencies": {
+    "@react-native-async-storage/async-storage": "^1.23.1",
+    "@types/react": "^18.2.0",
+    "@types/react-native": "^0.73.0",
+    "react": "18.2.0",
+    "react-native": "0.73.0",
+    "react-native-builder-bob": "^0.23.2",
+    "typescript": "^5.3.3"
+  },
+  "react-native-builder-bob": {
+    "source": "src",
+    "output": "lib",
+    "targets": [
+      "commonjs",
+      "module",
+      [
+        "typescript",
+        {
+          "project": "tsconfig.build.json"
+        }
+      ]
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/linkkit-io/react-native.git"
+  }
+}
