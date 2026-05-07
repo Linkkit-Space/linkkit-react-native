@@ -49,21 +49,21 @@ function CheckoutScreen() {
 
   const handleSignup = async () => {
     await trackLead({
-      eventName: 'Signup',
-      customerId: user.id,
+      customerId: user.id,          // required
       customerEmail: user.email,
       customerName: user.name,
+      eventName: 'Signup',          // optional label shown in dashboard
     });
   };
 
   const handlePurchase = async (order) => {
     await trackSale({
-      eventName: 'Purchase',
-      amount: order.totalCents,   // in cents
+      customerId: user.id,          // required
+      amount: order.totalCents,     // required, in cents
       currency: 'USD',
-      customerId: user.id,
       customerEmail: user.email,
       invoiceId: order.id,
+      eventName: 'Purchase',
     });
   };
 }
@@ -87,8 +87,8 @@ Returns:
 
 | Param | Type | Required |
 |-------|------|----------|
-| `eventName` | `string` | Yes |
-| `customerId` | `string` | No |
+| `customerId` | `string` | Yes — your internal user/customer ID |
+| `eventName` | `string` | No — label shown in dashboard (default: `"Lead"`) |
 | `customerEmail` | `string` | No |
 | `customerName` | `string` | No |
 | `metadata` | `Record<string, unknown>` | No |
@@ -97,10 +97,10 @@ Returns:
 
 | Param | Type | Required |
 |-------|------|----------|
-| `eventName` | `string` | Yes |
-| `amount` | `number` | Yes — in smallest currency unit (cents) |
-| `currency` | `string` | No — ISO 4217, default `USD` |
-| `customerId` | `string` | No |
+| `customerId` | `string` | Yes — your internal user/customer ID |
+| `amount` | `number` | Yes — in cents (e.g. `$9.99` → `999`) |
+| `eventName` | `string` | No — label shown in dashboard (default: `"Sale"`) |
+| `currency` | `string` | No — ISO 4217, default `usd` |
 | `customerEmail` | `string` | No |
 | `customerName` | `string` | No |
 | `paymentProcessor` | `string` | No — e.g. `"stripe"` |

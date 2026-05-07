@@ -10,18 +10,18 @@ export interface LinkkitContextValue {
 }
 
 export interface TrackLeadParams {
-  eventName: string;
-  customerId?: string;
+  eventName?: string;
+  customerId: string;
   customerEmail?: string;
   customerName?: string;
   metadata?: Record<string, unknown>;
 }
 
 export interface TrackSaleParams {
-  eventName: string;
+  eventName?: string;
   amount: number;
   currency?: string;
-  customerId?: string;
+  customerId: string;
   customerEmail?: string;
   customerName?: string;
   paymentProcessor?: string;
@@ -30,12 +30,12 @@ export interface TrackSaleParams {
 }
 
 export interface ConversionPayload {
-  click_id: string;
-  event_name: string;
+  lkclid: string;
+  event_name?: string;
   type: 'lead' | 'sale';
   amount?: number;
   currency?: string;
-  customer_id?: string;
+  customer_external_id: string;
   customer_email?: string;
   customer_name?: string;
   payment_processor?: string;

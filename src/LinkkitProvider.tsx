@@ -104,10 +104,10 @@ export function LinkkitProvider({
     async (params: TrackLeadParams) => {
       if (!clickId) return;
       await postConversion({
-        click_id: clickId,
+        lkclid: clickId,
         type: 'lead',
         event_name: params.eventName,
-        customer_id: params.customerId,
+        customer_external_id: params.customerId,
         customer_email: params.customerEmail,
         customer_name: params.customerName,
         metadata: params.metadata,
@@ -120,12 +120,12 @@ export function LinkkitProvider({
     async (params: TrackSaleParams) => {
       if (!clickId) return;
       await postConversion({
-        click_id: clickId,
+        lkclid: clickId,
         type: 'sale',
         event_name: params.eventName,
         amount: params.amount,
         currency: params.currency,
-        customer_id: params.customerId,
+        customer_external_id: params.customerId,
         customer_email: params.customerEmail,
         customer_name: params.customerName,
         payment_processor: params.paymentProcessor,
