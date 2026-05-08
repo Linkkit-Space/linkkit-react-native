@@ -1,5 +1,5 @@
 export interface LinkkitConfig {
-  apiKey: string;
+  publishableKey: string;
   baseUrl?: string;
 }
 

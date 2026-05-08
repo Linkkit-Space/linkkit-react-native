@@ -30,14 +30,14 @@ function extractClickId(url: string): string | null {
 
 export function LinkkitProvider({
   children,
-  apiKey,
+  publishableKey,
   baseUrl = DEFAULT_BASE_URL,
 }: LinkkitProviderProps) {
   const [clickId, setClickId] = useState<string | null>(null);
   const baseUrlRef = useRef(baseUrl);
-  const apiKeyRef = useRef(apiKey);
+  const publishableKeyRef = useRef(publishableKey);
   baseUrlRef.current = baseUrl;
-  apiKeyRef.current = apiKey;
+  publishableKeyRef.current = publishableKey;
 
   const persistClickId = useCallback(async (id: string) => {
     setClickId(id);
@@ -87,7 +87,7 @@ export function LinkkitProvider({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-API-Key': apiKeyRef.current,
+          'X-Publishable-Key': publishableKeyRef.current,
         },
         body: JSON.stringify(payload),
       });
