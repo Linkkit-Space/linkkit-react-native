@@ -183,6 +183,11 @@ export function LinkkitProvider({
     }
   }, [clickId]);
 
+  const clearClickId = useCallback(async () => {
+    setClickId(null);
+    await AsyncStorage.removeItem(STORAGE_KEY);
+  }, []);
+
   const trackLead = useCallback(
     async (params: TrackLeadParams) => {
       if (!clickId) return;
@@ -195,8 +200,9 @@ export function LinkkitProvider({
         customer_name: params.customerName,
         metadata: params.metadata,
       });
+      await clearClickId();
     },
-    [clickId, postConversion],
+    [clickId, postConversion, clearClickId],
   );
 
   const trackSale = useCallback(
