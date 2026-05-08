@@ -89,11 +89,8 @@ export function LinkkitProvider({
     if (isNew) {
       const res = await fetch(`${baseUrlRef.current}/track/open`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Publishable-Key': publishableKeyRef.current,
-        },
-        body: JSON.stringify({ lkclid: id } satisfies OpenPayload),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ publishable_key: publishableKeyRef.current, lkclid: id } satisfies OpenPayload),
       });
       if (!res.ok) {
         const body = await res.text();
@@ -149,14 +146,11 @@ export function LinkkitProvider({
   }, [handleUrl]);
 
   const postConversion = useCallback(
-    async (payload: ConversionPayload) => {
-      const res = await fetch(`${baseUrlRef.current}/conversions`, {
+    async (type: 'lead' | 'sale', payload: Omit<ConversionPayload, 'publishable_key'>) => {
+      const res = await fetch(`${baseUrlRef.current}/track/${type}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Publishable-Key': publishableKeyRef.current,
-        },
-        body: JSON.stringify(payload),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ publishable_key: publishableKeyRef.current, ...payload }),
       });
 
       if (!res.ok) {
@@ -171,11 +165,8 @@ export function LinkkitProvider({
     if (!clickId) return;
     const res = await fetch(`${baseUrlRef.current}/track/open`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Publishable-Key': publishableKeyRef.current,
-      },
-      body: JSON.stringify({ lkclid: clickId } satisfies OpenPayload),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ publishable_key: publishableKeyRef.current, lkclid: clickId } satisfies OpenPayload),
     });
     if (!res.ok) {
       const body = await res.text();
@@ -191,9 +182,8 @@ export function LinkkitProvider({
   const trackLead = useCallback(
     async (params: TrackLeadParams) => {
       if (!clickId) throw new Error('Linkkit: trackLead called before a click ID was captured. Ensure a deep link with lkclid was opened first.');
-      await postConversion({
+      await postConversion('lead', {
         lkclid: clickId,
-        type: 'lead',
         event_name: params.eventName,
         customer_external_id: params.customerId,
         customer_email: params.customerEmail,
@@ -208,10 +198,8 @@ export function LinkkitProvider({
   const trackSale = useCallback(
     async (params: TrackSaleParams) => {
       if (!clickId) throw new Error('Linkkit: trackSale called before a click ID was captured. Ensure a deep link with lkclid was opened first.');
-      await postConversion({
+      await postConversion('sale', {
         lkclid: clickId,
-        type: 'sale',
-        event_name: params.eventName,
         amount: params.amount,
         currency: params.currency,
         customer_external_id: params.customerId,

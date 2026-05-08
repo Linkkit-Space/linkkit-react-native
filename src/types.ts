@@ -11,6 +11,7 @@ export interface LinkkitContextValue {
 }
 
 export interface OpenPayload {
+  publishable_key: string;
   lkclid: string;
 }
 
@@ -35,9 +36,9 @@ export interface TrackSaleParams {
 }
 
 export interface ConversionPayload {
+  publishable_key: string;
   lkclid: string;
   event_name?: string;
-  type: 'lead' | 'sale';
   amount?: number;
   currency?: string;
   customer_external_id: string;
