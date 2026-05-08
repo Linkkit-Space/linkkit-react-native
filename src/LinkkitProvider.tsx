@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { AppState, Linking } from 'react-native';
+import { AppState, Linking, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Clipboard from '@react-native-clipboard/clipboard';
+import { PlayInstallReferrer } from 'react-native-play-install-referrer';
 import { LinkkitContext } from './LinkkitContext';
 import type {
   ConversionPayload,
@@ -28,6 +30,47 @@ function extractClickId(url: string): string | null {
   }
 }
 
+// Android: reads the Play Store install referrer for a deferred lkclid.
+// The referrer is a URL-encoded query string ("utm_source=linkkit&lkclid=abc123")
+// or occasionally a full URL — we try both forms.
+async function getAndroidDeferredClickId(): Promise<string | null> {
+  return new Promise<string | null>((resolve) => {
+    PlayInstallReferrer.getInstallReferrerInfo(
+      (info: { installReferrer?: string }, error: unknown) => {
+        if (error || !info?.installReferrer) {
+          resolve(null);
+          return;
+        }
+        const referrer = info.installReferrer;
+        const id =
+          extractClickId(referrer) ??
+          extractClickId(`https://x.com?${referrer}`);
+        resolve(id ?? null);
+      },
+    );
+  });
+}
+
+// iOS: reads the clipboard for a URL containing lkclid.
+// The Linkkit link page copies the destination URL to the clipboard before
+// redirecting to the App Store, so it's available on first launch.
+// iOS 16+ shows a system banner ("App pasted from ...") — no blocking prompt.
+async function getIOSDeferredClickId(): Promise<string | null> {
+  const text = await Clipboard.getString();
+  if (!text) return null;
+  return extractClickId(text);
+}
+
+async function getDeferredClickId(): Promise<string | null> {
+  try {
+    if (Platform.OS === 'android') return await getAndroidDeferredClickId();
+    if (Platform.OS === 'ios') return await getIOSDeferredClickId();
+  } catch {
+    return null;
+  }
+  return null;
+}
+
 export function LinkkitProvider({
   children,
   publishableKey,
@@ -53,9 +96,18 @@ export function LinkkitProvider({
   );
 
   useEffect(() => {
-    // Restore persisted click ID on mount
-    AsyncStorage.getItem(STORAGE_KEY).then((stored) => {
-      if (stored) setClickId(stored);
+    // Restore persisted click ID on mount; if none, attempt deferred attribution
+    AsyncStorage.getItem(STORAGE_KEY).then(async (stored) => {
+      if (stored) {
+        setClickId(stored);
+        return;
+      }
+      // No stored click ID — check Play Store install referrer (Android only)
+      const deferred = await getDeferredClickId();
+      if (deferred) {
+        persistClickId(deferred);
+        return;
+      }
     });
 
     // Handle cold-start deep link

@@ -32,6 +32,10 @@
   ],
   "author": "Linkkit",
   "license": "MIT",
+  "dependencies": {
+    "react-native-play-install-referrer": "^1.1.9",
+    "@react-native-clipboard/clipboard": "^1.14.0"
+  },
   "peerDependencies": {
     "react": ">=17.0.0",
     "react-native": ">=0.68.0",
