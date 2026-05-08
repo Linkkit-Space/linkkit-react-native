@@ -190,7 +190,7 @@ export function LinkkitProvider({
 
   const trackLead = useCallback(
     async (params: TrackLeadParams) => {
-      if (!clickId) return;
+      if (!clickId) throw new Error('Linkkit: trackLead called before a click ID was captured. Ensure a deep link with lkclid was opened first.');
       await postConversion({
         lkclid: clickId,
         type: 'lead',
@@ -207,7 +207,7 @@ export function LinkkitProvider({
 
   const trackSale = useCallback(
     async (params: TrackSaleParams) => {
-      if (!clickId) return;
+      if (!clickId) throw new Error('Linkkit: trackSale called before a click ID was captured. Ensure a deep link with lkclid was opened first.');
       await postConversion({
         lkclid: clickId,
         type: 'sale',
