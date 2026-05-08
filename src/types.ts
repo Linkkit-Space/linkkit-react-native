@@ -5,8 +5,13 @@ export interface LinkkitConfig {
 
 export interface LinkkitContextValue {
   clickId: string | null;
+  trackOpen: () => Promise<void>;
   trackLead: (params: TrackLeadParams) => Promise<void>;
   trackSale: (params: TrackSaleParams) => Promise<void>;
+}
+
+export interface OpenPayload {
+  lkclid: string;
 }
 
 export interface TrackLeadParams {

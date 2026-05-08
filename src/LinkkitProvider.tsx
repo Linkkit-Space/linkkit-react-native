@@ -6,6 +6,7 @@ import { PlayInstallReferrer } from 'react-native-play-install-referrer';
 import { LinkkitContext } from './LinkkitContext';
 import type {
   ConversionPayload,
+  OpenPayload,
   LinkkitConfig,
   TrackLeadParams,
   TrackSaleParams,
@@ -82,15 +83,29 @@ export function LinkkitProvider({
   baseUrlRef.current = baseUrl;
   publishableKeyRef.current = publishableKey;
 
-  const persistClickId = useCallback(async (id: string) => {
+  const persistClickId = useCallback(async (id: string, isNew = false) => {
     setClickId(id);
     await AsyncStorage.setItem(STORAGE_KEY, id);
+    if (isNew) {
+      const res = await fetch(`${baseUrlRef.current}/track/open`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Publishable-Key': publishableKeyRef.current,
+        },
+        body: JSON.stringify({ lkclid: id } satisfies OpenPayload),
+      });
+      if (!res.ok) {
+        const body = await res.text();
+        throw new Error(`Linkkit: trackOpen failed (${res.status}) — ${body}`);
+      }
+    }
   }, []);
 
   const handleUrl = useCallback(
     ({ url }: { url: string }) => {
       const id = extractClickId(url);
-      if (id) persistClickId(id);
+      if (id) persistClickId(id, true);
     },
     [persistClickId],
   );
@@ -105,7 +120,7 @@ export function LinkkitProvider({
       // No stored click ID — check Play Store install referrer (Android only)
       const deferred = await getDeferredClickId();
       if (deferred) {
-        persistClickId(deferred);
+        persistClickId(deferred, true);
         return;
       }
     });
@@ -152,6 +167,22 @@ export function LinkkitProvider({
     [],
   );
 
+  const trackOpen = useCallback(async () => {
+    if (!clickId) return;
+    const res = await fetch(`${baseUrlRef.current}/track/open`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Publishable-Key': publishableKeyRef.current,
+      },
+      body: JSON.stringify({ lkclid: clickId } satisfies OpenPayload),
+    });
+    if (!res.ok) {
+      const body = await res.text();
+      throw new Error(`Linkkit: trackOpen failed (${res.status}) — ${body}`);
+    }
+  }, [clickId]);
+
   const trackLead = useCallback(
     async (params: TrackLeadParams) => {
       if (!clickId) return;
@@ -189,7 +220,7 @@ export function LinkkitProvider({
   );
 
   return (
-    <LinkkitContext.Provider value={{ clickId, trackLead, trackSale }}>
+    <LinkkitContext.Provider value={{ clickId, trackOpen, trackLead, trackSale }}>
       {children}
     </LinkkitContext.Provider>
   );

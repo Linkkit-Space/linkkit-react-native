@@ -5,4 +5,5 @@ export type {
   LinkkitContextValue,
   TrackLeadParams,
   TrackSaleParams,
+  OpenPayload,
 } from './types';
