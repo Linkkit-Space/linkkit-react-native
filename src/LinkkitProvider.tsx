@@ -13,7 +13,9 @@ import type {
 } from './types';
 
 const STORAGE_KEY = '@linkkit/click_id';
+const STORAGE_TS_KEY = '@linkkit/click_id_ts';
 const DEFAULT_BASE_URL = 'https://api.linkkit.io';
+const DEFAULT_ATTRIBUTION_WINDOW_DAYS = 90;
 const LKCLID_PARAM = 'lkclid';
 
 interface LinkkitProviderProps extends LinkkitConfig {
@@ -76,16 +78,27 @@ export function LinkkitProvider({
   children,
   publishableKey,
   baseUrl = DEFAULT_BASE_URL,
+  attributionWindow = DEFAULT_ATTRIBUTION_WINDOW_DAYS,
 }: LinkkitProviderProps) {
   const [clickId, setClickId] = useState<string | null>(null);
   const baseUrlRef = useRef(baseUrl);
   const publishableKeyRef = useRef(publishableKey);
+  const attributionWindowRef = useRef(attributionWindow);
+  const clickTimestampRef = useRef<number | null>(null);
   baseUrlRef.current = baseUrl;
   publishableKeyRef.current = publishableKey;
+  attributionWindowRef.current = attributionWindow;
+
+  const isExpired = useCallback((timestampMs: number): boolean => {
+    const windowMs = attributionWindowRef.current * 24 * 60 * 60 * 1000;
+    return Date.now() - timestampMs > windowMs;
+  }, []);
 
   const persistClickId = useCallback(async (id: string, isNew = false) => {
+    const now = Date.now();
+    clickTimestampRef.current = now;
     setClickId(id);
-    await AsyncStorage.setItem(STORAGE_KEY, id);
+    await AsyncStorage.multiSet([[STORAGE_KEY, id], [STORAGE_TS_KEY, now.toString()]]);
     if (isNew) {
       const res = await fetch(`${baseUrlRef.current}/track/open`, {
         method: 'POST',
@@ -109,9 +122,15 @@ export function LinkkitProvider({
 
   useEffect(() => {
     // Restore persisted click ID on mount; if none, attempt deferred attribution
-    AsyncStorage.getItem(STORAGE_KEY).then(async (stored) => {
+    AsyncStorage.multiGet([STORAGE_KEY, STORAGE_TS_KEY]).then(async ([[, stored], [, ts]]) => {
       if (stored) {
-        setClickId(stored);
+        const expired = ts ? isExpired(Number(ts)) : false;
+        if (expired) {
+          await AsyncStorage.multiRemove([STORAGE_KEY, STORAGE_TS_KEY]);
+        } else {
+          clickTimestampRef.current = ts ? Number(ts) : Date.now();
+          setClickId(stored);
+        }
         return;
       }
       // No stored click ID — check Play Store install referrer (Android only)
@@ -175,13 +194,18 @@ export function LinkkitProvider({
   }, [clickId]);
 
   const clearClickId = useCallback(async () => {
+    clickTimestampRef.current = null;
     setClickId(null);
-    await AsyncStorage.removeItem(STORAGE_KEY);
+    await AsyncStorage.multiRemove([STORAGE_KEY, STORAGE_TS_KEY]);
   }, []);
 
   const trackLead = useCallback(
     async (params: TrackLeadParams) => {
       if (!clickId) throw new Error('Linkkit: trackLead called before a click ID was captured. Ensure a deep link with lkclid was opened first.');
+      if (clickTimestampRef.current !== null && isExpired(clickTimestampRef.current)) {
+        await clearClickId();
+        throw new Error(`Linkkit: trackLead called after the ${attributionWindowRef.current}-day attribution window expired.`);
+      }
       await postConversion('lead', {
         lkclid: clickId,
         event_name: params.eventName,
@@ -192,12 +216,16 @@ export function LinkkitProvider({
       });
       await clearClickId();
     },
-    [clickId, postConversion, clearClickId],
+    [clickId, postConversion, clearClickId, isExpired],
   );
 
   const trackSale = useCallback(
     async (params: TrackSaleParams) => {
       if (!clickId) throw new Error('Linkkit: trackSale called before a click ID was captured. Ensure a deep link with lkclid was opened first.');
+      if (clickTimestampRef.current !== null && isExpired(clickTimestampRef.current)) {
+        await clearClickId();
+        throw new Error(`Linkkit: trackSale called after the ${attributionWindowRef.current}-day attribution window expired.`);
+      }
       await postConversion('sale', {
         lkclid: clickId,
         amount: params.amount,
@@ -210,7 +238,7 @@ export function LinkkitProvider({
         metadata: params.metadata,
       });
     },
-    [clickId, postConversion],
+    [clickId, postConversion, clearClickId, isExpired],
   );
 
   return (

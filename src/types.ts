@@ -1,6 +1,8 @@
 export interface LinkkitConfig {
   publishableKey: string;
   baseUrl?: string;
+  /** Days after a click during which conversions are still attributed. Defaults to 90. */
+  attributionWindow?: number;
 }
 
 export interface LinkkitContextValue {
