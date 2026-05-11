@@ -7,6 +7,7 @@ import { LinkkitContext } from './LinkkitContext';
 import type {
   ConversionPayload,
   OpenPayload,
+  OpenResponse,
   LinkkitConfig,
   TrackLeadParams,
   TrackSaleParams,
@@ -81,6 +82,7 @@ export function LinkkitProvider({
   attributionWindow = DEFAULT_ATTRIBUTION_WINDOW_DAYS,
 }: LinkkitProviderProps) {
   const [clickId, setClickId] = useState<string | null>(null);
+  const [destinationUrl, setDestinationUrl] = useState<string | null>(null);
   const baseUrlRef = useRef(baseUrl);
   const publishableKeyRef = useRef(publishableKey);
   const attributionWindowRef = useRef(attributionWindow);
@@ -109,7 +111,11 @@ export function LinkkitProvider({
         const body = await res.text();
         throw new Error(`Linkkit: trackOpen failed (${res.status}) — ${body}`);
       }
+      const data: OpenResponse = await res.json();
+      if (data.url) setDestinationUrl(data.url);
+      return data.url ?? null;
     }
+    return null;
   }, []);
 
   const handleUrl = useCallback(
@@ -180,8 +186,8 @@ export function LinkkitProvider({
     [],
   );
 
-  const trackOpen = useCallback(async () => {
-    if (!clickId) return;
+  const trackOpen = useCallback(async (): Promise<{ url: string | null }> => {
+    if (!clickId) return { url: null };
     const res = await fetch(`${baseUrlRef.current}/track/open`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -191,11 +197,15 @@ export function LinkkitProvider({
       const body = await res.text();
       throw new Error(`Linkkit: trackOpen failed (${res.status}) — ${body}`);
     }
+    const data: OpenResponse = await res.json();
+    if (data.url) setDestinationUrl(data.url);
+    return { url: data.url ?? null };
   }, [clickId]);
 
   const clearClickId = useCallback(async () => {
     clickTimestampRef.current = null;
     setClickId(null);
+    setDestinationUrl(null);
     await AsyncStorage.multiRemove([STORAGE_KEY, STORAGE_TS_KEY]);
   }, []);
 
@@ -242,7 +252,7 @@ export function LinkkitProvider({
   );
 
   return (
-    <LinkkitContext.Provider value={{ clickId, trackOpen, trackLead, trackSale }}>
+    <LinkkitContext.Provider value={{ clickId, destinationUrl, trackOpen, trackLead, trackSale }}>
       {children}
     </LinkkitContext.Provider>
   );

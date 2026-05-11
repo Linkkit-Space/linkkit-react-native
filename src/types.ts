@@ -7,7 +7,9 @@ export interface LinkkitConfig {
 
 export interface LinkkitContextValue {
   clickId: string | null;
-  trackOpen: () => Promise<void>;
+  /** Resolved destination URL from the most recent deep link open. Set automatically; use this to navigate the user. */
+  destinationUrl: string | null;
+  trackOpen: () => Promise<{ url: string | null }>;
   trackLead: (params: TrackLeadParams) => Promise<void>;
   trackSale: (params: TrackSaleParams) => Promise<void>;
 }
@@ -15,6 +17,10 @@ export interface LinkkitContextValue {
 export interface OpenPayload {
   publishable_key: string;
   lkclid: string;
+}
+
+export interface OpenResponse {
+  url?: string;
 }
 
 export interface TrackLeadParams {
