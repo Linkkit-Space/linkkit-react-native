@@ -216,7 +216,7 @@ export function LinkkitProvider({
         await clearClickId();
         throw new Error(`Linkkit: trackLead called after the ${attributionWindowRef.current}-day attribution window expired.`);
       }
-      await postConversion('lead', {
+      const promise = postConversion('lead', {
         lkclid: clickId,
         event_name: params.eventName,
         customer_external_id: params.customerId,
@@ -225,6 +225,11 @@ export function LinkkitProvider({
         customer_avatar: params.customerAvatar,
         metadata: params.metadata,
       });
+      if (params.mode === 'async') {
+        promise.catch(() => {});
+      } else {
+        await promise;
+      }
       await clearClickId();
     },
     [clickId, postConversion, clearClickId, isExpired],
@@ -237,7 +242,7 @@ export function LinkkitProvider({
         await clearClickId();
         throw new Error(`Linkkit: trackSale called after the ${attributionWindowRef.current}-day attribution window expired.`);
       }
-      await postConversion('sale', {
+      const promise = postConversion('sale', {
         lkclid: clickId,
         amount: params.amount,
         currency: params.currency,
@@ -249,6 +254,11 @@ export function LinkkitProvider({
         invoice_id: params.invoiceId,
         metadata: params.metadata,
       });
+      if (params.mode === 'async') {
+        promise.catch(() => {});
+      } else {
+        await promise;
+      }
     },
     [clickId, postConversion, clearClickId, isExpired],
   );

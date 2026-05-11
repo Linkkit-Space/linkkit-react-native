@@ -30,6 +30,8 @@ export interface TrackLeadParams {
   customerName?: string;
   customerAvatar?: string;
   metadata?: Record<string, unknown>;
+  /** 'wait' (default) awaits server confirmation. 'async' fires and returns immediately. */
+  mode?: 'wait' | 'async';
 }
 
 export interface TrackSaleParams {
@@ -43,6 +45,8 @@ export interface TrackSaleParams {
   paymentProcessor?: string;
   invoiceId?: string;
   metadata?: Record<string, unknown>;
+  /** 'wait' (default) awaits server confirmation. 'async' fires and returns immediately. */
+  mode?: 'wait' | 'async';
 }
 
 export interface ConversionPayload {
