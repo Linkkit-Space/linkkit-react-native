@@ -28,6 +28,7 @@ export interface TrackLeadParams {
   customerId: string;
   customerEmail?: string;
   customerName?: string;
+  customerAvatar?: string;
   metadata?: Record<string, unknown>;
 }
 
@@ -38,6 +39,7 @@ export interface TrackSaleParams {
   customerId: string;
   customerEmail?: string;
   customerName?: string;
+  customerAvatar?: string;
   paymentProcessor?: string;
   invoiceId?: string;
   metadata?: Record<string, unknown>;
@@ -52,6 +54,7 @@ export interface ConversionPayload {
   customer_external_id: string;
   customer_email?: string;
   customer_name?: string;
+  customer_avatar?: string;
   payment_processor?: string;
   invoice_id?: string;
   metadata?: Record<string, unknown>;

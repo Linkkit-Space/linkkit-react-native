@@ -222,6 +222,7 @@ export function LinkkitProvider({
         customer_external_id: params.customerId,
         customer_email: params.customerEmail,
         customer_name: params.customerName,
+        customer_avatar: params.customerAvatar,
         metadata: params.metadata,
       });
       await clearClickId();
@@ -243,6 +244,7 @@ export function LinkkitProvider({
         customer_external_id: params.customerId,
         customer_email: params.customerEmail,
         customer_name: params.customerName,
+        customer_avatar: params.customerAvatar,
         payment_processor: params.paymentProcessor,
         invoice_id: params.invoiceId,
         metadata: params.metadata,
